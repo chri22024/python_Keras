@@ -8,8 +8,9 @@ import P11_model_util as mutil
 class ModelMaker:
     
 
-    def __init__(self, dst_dir, est_file, info_file, graph_file, input_size, hist_file,
-                 filters, kernel_size, pool_size, dense_dims, lr, data_size, batch_size, epochs, vaild_rate):
+    def __init__(self, src_dir, dst_dir, est_file, info_file, graph_file, input_size, hist_file,
+                 filters, kernel_size, pool_size, dense_dims, lr, batch_size, epochs, vaild_rate):
+        self.src_dir = src_dir
         self.dst_dir = dst_dir
         self.est_file = est_file
         self.info_file = info_file
@@ -21,7 +22,6 @@ class ModelMaker:
         self.pool_size = pool_size
         self.dense_dims = dense_dims
         self.lr = lr
-        self.data_size = data_size
         self.batch_size = batch_size
         self.epochs = epochs
         self.vaild_rata = vaild_rate
@@ -29,7 +29,7 @@ class ModelMaker:
 
     def define_model(self):
 
-        input_x = Input(shape=(*self.input_size, 1))
+        input_x = Input(shape=(*self.input_size, 3))
         x = input_x
 
         for f in self.filters:
@@ -56,17 +56,21 @@ class ModelMaker:
     
     def fit_model(self):
 
-        train_images, train_classes = util.load_data(self.data_size)
+        train_generator, train_n, valid_generator, valid_n = util.make_generator(
+            self.src_dir, self.vaild_rata, self.input_size, self.batch_size
+        )
+
 
         model = self.define_model()
 
 
         history = model.fit(
-            train_images,
-            train_classes,
+            train_generator,
+            steps_per_epoch = int(train_n / self.batch_size),
             batch_size = self.batch_size,
             epochs = self.epochs,
-            validation_split = self.vaild_rata
+            validation_data = valid_generator,
+            validation_steps = int(valid_n/self.batch_size)
         )
 
         return model, history.history

@@ -53,15 +53,23 @@ def make_generator(src_dir, valid_rate, input_size, batch_size):
         lambda: train_generator,
         output_types = (tf.float32, tf.float32),
         output_shapes = (
-            [None, *valid_generator.image_shape]
-            [None, *valid_generator.num_classes]
+            [None, *train_generator.image_shape],
+            [None, train_generator.num_classes]
         )
     )
 
+    valid_ds = Dataset.from_generator(
+        lambda: train_generator,
+        output_types = (tf.float32, tf.float32),
+        output_shapes = (
+            [None, *valid_generator.image_shape],
+            [None, valid_generator.num_classes]
+        )
+    )
     train_ds = train_ds.repeat()
     valid_ds = valid_ds.repeat()
 
-    return train_ds, train_generator, valid_ds, valid_generator.n
+    return train_ds, train_generator.n, valid_ds, valid_generator.n
     
 
 def plot(hisotry, filename):
